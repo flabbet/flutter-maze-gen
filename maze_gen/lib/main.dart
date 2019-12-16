@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maze_gen/maze_generator.dart';
+import 'package:maze_gen/maze_generator_base.dart';
 import 'package:maze_gen/open_paint.dart';
 
 void main() => runApp(MazeGeneratorApp());
@@ -28,7 +29,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
 
-  MazeGenerator generator = MazeGenerator(30,30);
+  MazeGeneratorBase generator = MazeGenerator(30,30);
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +39,13 @@ class _MainPageState extends State<MainPage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             RaisedButton(
               onPressed: generator.generate,
             child: Text("Generate")),
             Container(
-              margin: EdgeInsets.only(right:300),
+              margin: EdgeInsets.only(right: 150),
               child: CustomPaint(
                 size: Size(30,30),
                 painter: OpenPainter(generator)

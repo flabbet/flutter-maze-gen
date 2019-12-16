@@ -1,124 +1,96 @@
-import 'dart:io';
 import 'dart:math';
 
-import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 
-import 'package:flutter/material.dart';
+import 'package:maze_gen/maze_generator_base.dart';
 
-class MazeGenerator{
+class MazeGenerator extends MazeGeneratorBase{
+  List<int> grid;
+  int attemptsLeft = 5;
 
-  int width;
-  int height;
-  List<List<int>> grid;
-
-  final int N = 1;
-  final int S = 2;
-  final int E = 4;
-  final int W = 8;
-
-  MazeGenerator(this.height, this.width){
-      this.grid = List<List<int>>();
+  MazeGenerator(height, width) : super(height, width){
+      this.grid = List<int>();
   }
 
   void generate(){
     populateGird();
-    carvePassagesFrom(0, 0, this.grid);
-    var mazeStr = generateAsciiMaze();
-    print(mazeStr);
+    for(int i = 0; i < 50; i++) {
+      generateMaze();
+    }
   }
 
-    List<List<Offset>> getDrawLines(Size size){
-    final lines = List<List<Offset>>();
-        for (int y = 0; y < height; y++){
-          for(int x = 0; x < width; x++){
-            var cellx = grid[y][x] & S != 0 ? x : 0;
-            var celly = grid[y][x] & E != 0 ? y : 0;
-            var modX = cellx != 0 ? 3 : 0;
-            var modY = celly != 0 ? 3 : 0;
-            lines.add([Offset(cellx.toDouble(), celly.toDouble()), Offset(cellx.toDouble(), celly.toDouble())]);
+    List<Offset> getDrawPoints(){
+      List<Offset> offsets = List<Offset>();
+      for(int y = 0; y < height; y++){
+        for(int x = 0; x < width; x++){
+            if(getCell(x, y) == 1){
+              offsets.add(Offset(x.toDouble(),y.toDouble()));
+            }
           }
         }
-        return lines;
+      return offsets;
     }
 
-  String generateAsciiMaze(){
-    String finalStr = "";
-    finalStr += " ";
-        for(int i =0; i < width; i++){
-          finalStr += " _";
-        }
-        finalStr += "\n";
 
-        for (int y = 0; y < height; y++){
-          finalStr += " |";
-          for(int x = 0; x < width; x++){
-            var cell = grid[y][x] & S != 0 ? " " : "_";
-            finalStr += cell;
-            cell = grid[y][x] & E != 0 ? " " : "|";
-            finalStr += cell;
-          }
-          finalStr += "\n";
-        }
-        return finalStr;
-  }
 
   void populateGird(){
-    grid = List<List<int>>.generate(
-      width, (i) => List<int>.generate(height, (j) => 0));
+    grid = List<int>.generate(width * height, (i) => 1);
+    grid[height ~/ 2] = 0;
   }
 
-  void carvePassagesFrom(int cx, int cy, List<List<int>> grid){
-  List<int> directions = shuffle([N,S,E,W]);
-
-  for (var direction in directions) {
-    var nx = cx + getDirectionXOffset(direction);
-    var ny = cy + getDirectionYOffset(direction);
-
-    if(isOutOfBounds(nx,ny,grid)){
-      continue;
+  void generateMaze(){
+    var pCount = 0;
+    for(int y = 0; y < height; y++){
+        for(int x = 0; x < width; x++){
+          if(getCell(x, y) == 0){
+            pCount += makePassage(x,y, -1,0)
+              + makePassage(x,y,  1,0)
+              + makePassage(x,y, 0,-1)
+              + makePassage(x,y, 0, 1);
+          }
+        }
+      }
+    if(pCount == 0){
+      attemptsLeft--;
+      if(attemptsLeft > 0){
+        for(int x = 0; x < width; x++){
+          if(getCell(x, height-2) == 0){
+            setCell(x, height-1, 0);
+            break;
+          }
+        }
+      }
     }
+  }
 
-    if(grid[ny][nx] != 0){
-      continue;
+  int makePassage(int x,int y, int i, int j){
+    //Checking neighbor cells
+    if(    getCell(x+i, y+j) == 1
+        && getCell( x+i+j, y+j+i ) == 1
+   		  && getCell( x+i-j, y+j-i ) == 1){
+
+      if(getCell(x+i+j, y+j+j) == 1
+        && getCell( x+i+i+j, y+j+j+i ) == 1
+   		  && getCell( x+i+i -j, y+j+j -i ) == 1) {
+
+        if (Random().nextDouble() > 0.5) {
+          setCell(x + i, y + j, 0);
+          return 1;
+        }
+      }
     }
-        grid[cy][cx] |= direction;
-        grid[ny][nx] |= getOppositeDirection(direction);
-        carvePassagesFrom(nx, ny, grid);
+    return 0;
   }
 
+  int getCell(int x, int y){
+    return (x>= 0 && y>=0 && x<width && y < height) ? grid[x+y * width] : -1;
   }
 
-  bool isOutOfBounds(int x,int y, List<List<int>> grid){
-    return (x < 0 || x > width - 1) || (y < 0 || y > width - 1);
-  }
-
-  List<int> shuffle(List<int> items){
-    var random = new Random();
-    for(var i = items.length - 1; i > 0; i--){
-      var n = random.nextInt(i+1);
-      var temp = items[i];
-      items[i] = items[n];
-      items[n] = temp;
+  void setCell(int x, int y, int state) {
+    if(x>=0 && y>=0 && x<width && y<height)
+    {
+  	  grid[x + y*width] = state;
     }
-    return items;
   }
 
-  int getDirectionXOffset(int direction){
-    if(direction == 4) return 1;
-    else if(direction == 8) return -1;
-    else return 0;
   }
-
-  int getDirectionYOffset(int direction){
-    if(direction == 1) return -1;
-    else if(direction == 2) return 1;
-    else return 0;
-  }
-
-  int getOppositeDirection(int direction){
-    if(direction == 4) return 8;
-    if(direction == 8) return 4;
-    if(direction == 1) return 2;
-    if(direction == 2) return 1;
-    return null;
-  }}

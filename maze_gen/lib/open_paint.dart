@@ -12,15 +12,13 @@ class OpenPainter extends CustomPainter {
 @override
 void paint(Canvas canvas, Size size) {
   final pointMode = PointMode.points;
-  final lines = mazeGen.getDrawLines(size);
+  final points = mazeGen.getDrawPoints();
   final paint = Paint()
     ..color = Colors.black
     ..strokeWidth = 1
     ..strokeCap = StrokeCap.square;
     canvas.scale(7);
-    for (var offsets in lines){
-    canvas.drawLine(offsets[0], offsets[1], paint);
-  }
+    canvas.drawPoints(pointMode,points, paint);
   canvas.save();
   canvas.restore();
 }
