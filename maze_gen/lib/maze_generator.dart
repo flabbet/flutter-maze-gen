@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+
 class MazeGenerator{
 
   int width;
   int height;
-  int seed;
   List<List<int>> grid;
 
   final int N = 1;
@@ -18,12 +21,25 @@ class MazeGenerator{
   }
 
   void generate(){
-    this.seed = Random().nextInt(9999);
     populateGird();
     carvePassagesFrom(0, 0, this.grid);
     var mazeStr = generateAsciiMaze();
     print(mazeStr);
   }
+
+    List<List<Offset>> getDrawLines(Size size){
+    final lines = List<List<Offset>>();
+        for (int y = 0; y < height; y++){
+          for(int x = 0; x < width; x++){
+            var cellx = grid[y][x] & S != 0 ? x : 0;
+            var celly = grid[y][x] & E != 0 ? y : 0;
+            var modX = cellx != 0 ? 3 : 0;
+            var modY = celly != 0 ? 3 : 0;
+            lines.add([Offset(cellx.toDouble(), celly.toDouble()), Offset(cellx.toDouble(), celly.toDouble())]);
+          }
+        }
+        return lines;
+    }
 
   String generateAsciiMaze(){
     String finalStr = "";

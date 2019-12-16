@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maze_gen/maze_generator.dart';
+import 'package:maze_gen/open_paint.dart';
 
 void main() => runApp(MazeGeneratorApp());
 
@@ -41,7 +42,14 @@ class _MainPageState extends State<MainPage> {
           children: <Widget>[
             RaisedButton(
               onPressed: generator.generate,
-            child: Text("Generate"))
+            child: Text("Generate")),
+            Container(
+              margin: EdgeInsets.only(right:300),
+              child: CustomPaint(
+                size: Size(30,30),
+                painter: OpenPainter(generator)
+              ),
+            )
           ],
         ),
       ),
